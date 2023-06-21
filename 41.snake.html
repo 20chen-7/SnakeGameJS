@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Document</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+
+            }
+            #main {
+                height: 420px;
+                width: 360px;
+                border: 10px #000 solid;
+                background-color: #b7d4a8;
+                border-radius: 20px;
+                margin: 50px auto;
+
+            }
+            #stage {
+                height: 304px;
+                width: 304px;
+                border: 2px #000 solid;
+                margin: 20px auto;
+                position: relative;
+            }
+            #snake > div{
+                width: 10px;
+                height: 10px;
+                background-color: #000;
+                position: absolute;
+                border: 1px solid #b7d4a8;
+            }
+            #food {
+                width: 10px;
+                height: 10px;
+                position: absolute;
+                top: 100px;
+                left:120px;
+                display: flex;
+                flex-flow: wrap;
+            }
+            #food > div{
+                width: 5px;
+                height: 5px;
+                background-color: #000;
+                transform: rotate(45deg);
+            }
+            #info {
+                width: 304px;
+                margin: 20px auto;
+                display: flex;
+                justify-content: space-between;
+                font: bold 20px courier;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="main">
+            <div id="stage">
+                <div id="snake">
+                    <div></div>
+                </div>
+                <div id="food">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+            <div id="info">
+                <div>SCORE:<span id="score">0</span></div>
+                <div>LEVEL:<span id="level">1</span></div>
+
+            </div>
+        </div>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        
+        <script>
+            //obtain the snake container
+            const snake = document.getElementById('snake');
+            //body
+            const snakes = snake.getElementsByTagName("div");
+            const head = snakes[0];
+
+            const food = document.getElementById("food");
+
+            //score+level
+            const scoreSpan = document.getElementById("score");
+            const levelSpan = document.getElementById("level");
+            let score = 0;
+            let level = 0;
+
+            // food location is random
+            function changeFood(){
+                //0-29 * 10
+                const x = Math.floor(Math.random()*30) * 10
+                const y = Math.floor(Math.random()*30) * 10
+
+                //food coor
+                food.style.left = x + "px";
+                food.style.top = y + "px";
+            }
+            //assign dir avoid inconsistency
+            let dir;
+            const keyArr = ["ArrowUp","ArrowDown","ArrowRight","ArrowLeft"]
+            const reObj = {
+                            ArrowUp:"ArrowDown",
+                            ArrowDown:"ArrowUp",
+                            ArrowRight:"ArrowLeft",
+                            ArrowLeft:"ArrowRight"
+                        }
+            //could not return 
+            //1.length of body > 2
+            //2.opposite dir
+            //solution: keep origin dir
+
+            //record the pressedKey avoid press fast in 300ms
+            let keyActive = true;
+            /* keydown, keyup*/
+            document.addEventListener("keydown", (event) =>{
+                if (keyActive && keyArr.includes(event.key)){
+                    if (snakes.length < 2 || reObj[dir] !== event.key){
+                        dir = event.key;
+                        rkeyActive = false;
+                    }
+                }
+            })
+
+            //gameover
+            let isGameOver = false;
+            //snake move, tail ->head
+            setTimeout(function move(){
+                //obtain snake head
+                keyActive = true;
+                const head = snakes[0];
+
+                let x = head.offsetLeft, y = head.offsetTop;
+                switch(dir){
+                    case "ArrowUp":
+                        y = y - 10;
+                        break;
+                    case "ArrowDown":
+                        y = y + 10;
+                        break;
+                    case "ArrowRight":
+                        //right
+                        x = x + 10;
+                        break;
+                    case "ArrowLeft":
+                        x = x - 10;
+                        break;
+                }
+                //eat food
+                if (head.offsetTop === food.offsetTop &&
+                head.offsetLeft === food.offsetLeft){
+                    //1.food locations
+                    changeFood();
+                    //2.length of snake
+                    snake.insertAdjacentHTML("beforeend", "<div/>")
+                    score++;
+                    scoreSpan.textContent = score;
+                    //check level
+                    if (score%10 == 0 && level < 12){
+                        level ++;
+                        levelSpan.textContent = level + 1;
+                    }
+                }
+                //end game
+                //1.encounter wall
+                //2.eat itself
+                if (x < 0 || x > 290 || y < 0 || y > 290){
+                    // isGameOver = true;
+                    alert("Game Over!");
+                    return;
+                }
+                if (dir){
+                    for (let i = 0; i < snakes.length-1; i++){
+                    if (snakes[i].offsetLeft === x && snakes[i].offsetTop === y){
+                        alert("Encounter itself, Game Over!");
+                        return;
+                    }
+                }
+                }
+
+
+
+                //move snake tail
+                //obatin coor
+                const tail = snakes[snakes.length-1];
+                tail.style.left = x + "px";
+                tail.style.top = y + "px";
+                //update new head, move tail to head
+                snake.insertAdjacentElement("afterbegin", tail);
+
+                setTimeout(move, 300 - level * 20)
+            }, 300)
+        </script>
+    </body>
+</html>
